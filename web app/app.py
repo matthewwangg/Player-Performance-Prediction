@@ -13,7 +13,8 @@ app = Flask(__name__, static_url_path="/static")
 def index():
 
     top_players = predicts()
-    return render_template('index.html', top_players=top_players)
+    pictures = get_pictures(top_players)
+    return render_template('index.html', top_players=top_players, pictures=pictures)
 
 #@app.route('/predicts', methods=['GET','POST'])
 def predicts():
@@ -95,6 +96,19 @@ def get_top_players(model, dataframe, position, n=5):
     top_players = sorted_df.head(n)
 
     return top_players.values.tolist()
+
+# Function to set player images based on hashmap of manually accrued images (will be modified once I have EPL permission to use images
+def get_pictures(topplayers):
+    hashmap = {"Erling Haaland" : "https://upload.wikimedia.org/wikipedia/commons/6/6e/Erling_Haaland_2023_%28cropped-v2%29.jpg"
+               }
+    image_urls = []
+    for i in topplayers:
+        if i[0] in hashmap.keys():
+            image_urls.append(hashmap[i[0]])
+        else:
+            image_urls.append("")
+    print(image_urls)
+    return image_urls
 
 # Function to train XGBoost model with the predefined hyperparameters
 def train_xgboost_model(X, y, position):
