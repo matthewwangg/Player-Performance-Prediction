@@ -7,6 +7,11 @@ from sklearn.metrics import mean_squared_error
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from data_processing import find_path
+from sklearn.model_selection import train_test_split
 
 # Function to train all 4 models for each position
 def train_models(dataframes, positions):
@@ -118,3 +123,52 @@ def train_xgboost_model_best(X, y, position):
     print(f"XGBoost Model trained for {position} position.")
 
     return xgb_model
+
+# Function to train Convolutional Neural Network
+def train_neural_networks():
+    # I'm just setting it up for future use
+
+    players_df = pd.read_csv(find_path())
+
+    # Assuming your dataframe is called 'df'
+    X = players_df.drop("total_points", axis=1)  # Features (all columns except "total_points")
+    y = players_df["total_points"]  # Target variable
+
+    # Split data into training and testing sets (adjust test_size as needed)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    # Define the CNN model
+    model = keras.Sequential([
+        # Input layer (adjust based on your data shape)
+        keras.Input(shape=(img_height, img_width, channels)),  # Replace with your image dimensions and channels
+
+        # Convolutional layers with ReLU activation
+        keras.layers.Conv2D(32, (3, 3), activation="relu", input_shape=(img_height, img_width, channels)),
+        keras.layers.MaxPooling2D((2, 2)),
+        keras.layers.Conv2D(64, (3, 3), activation="relu"),
+        keras.layers.MaxPooling2D((2, 2)),
+
+        # Flatten layer for dense connections
+        keras.layers.Flatten(),
+
+        # Dense layers with ReLU activation
+        keras.layers.Dense(128, activation="relu"),
+        keras.layers.Dense(64, activation="relu"),
+
+        # Output layer for player points prediction (adjust units for other tasks)
+        keras.layers.Dense(1)
+    ])
+
+    # Compile the model
+    model.compile(loss="mse", optimizer="adam", metrics=["mae"])  # Mean squared error, mean absolute error
+
+    # Data Augmentation (optional)
+    datagen = ImageDataGenerator(rotation_range=40, width_shift_range=0.2, height_shift_range=0.2, shear_range=0.2,
+                                 zoom_range=0.2)
+
+    # Train the model
+    model.fit(datagen.flow(X_train, y_train, batch_size=32), epochs=10, validation_data=(X_test, y_test))
+
+    # Evaluate the model
+    loss, mae = model.evaluate(X_test, y_test)
+    print(f"Loss: {loss}, MAE: {mae}")
