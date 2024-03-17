@@ -15,11 +15,13 @@ import base64
 from xgboost import plot_importance
 from pulp import LpProblem, LpVariable, lpSum, LpMaximize, LpMinimize
 from data_processing import predicts
+from database import app, db, Player, init_db
 
 app = Flask(__name__, static_url_path="/static")
 
 @app.route('/')
 def index():
+
 
     return render_template('index.html')
     #top_players, optimized_players = predicts()
